@@ -29,22 +29,22 @@ jobs:
 
       - name: Check RDS Status Before Starting
         run: |
-            STATUS=$(aws rds describe-db-instances --db-instance-identifier ${{ github.event.inputs.db_instance }} --query 'DBInstances[0].DBInstanceStatus' --output text)
-            echo "Current RDS Status: $STATUS"
-        
-            if [[ "$STATUS" == "available" ]]; then
-              echo "RDS instance is already running. Skipping start command."
-              exit 0
-            elif [[ "$STATUS" == "stopped"]]; then
-              echo "Starting RDS instance..."
-              aws rds start-db-instance --db-instance-identifier ${{ github.event.inputs.db_instance }}
-            else
-              echo "Instance cannot be started because it is in an invalid state: $STATUS"
-              exit 1
-            fi
-      
-      
-            
-      
-      
-            
+          DB_INSTANCE_ID=${{ github.event.inputs.db_instance }}
+          
+          echo "Fetching current status of RDS instance: $DB_INSTANCE_ID..."
+          STATUS=$(aws rds describe-db-instances --db-instance-identifier "$DB_INSTANCE_ID" --query 'DBInstances[0].DBInstanceStatus' --output text)
+          echo "Current RDS Status: $STATUS"
+
+          if [[ "$STATUS" == "available" ]]; then
+            echo "RDS instance is already running. Skipping start command."
+            exit 0
+          fi
+
+          if [[ "$STATUS" == "stopped" ]] || [[ "$STATUS" == "inaccessible-encryption-credentials-recoverable" ]] || [[ "$STATUS" == "incompatible-network" ]]; then
+            echo "Starting RDS instance..."
+            aws rds start-db-instance --db-instance-identifier "$DB_INSTANCE_ID"
+            exit 0
+          fi
+
+          echo "Instance cannot be started because it is in an invalid state: $STATUS"
+          exit 1
