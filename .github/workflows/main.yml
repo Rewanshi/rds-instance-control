@@ -25,10 +25,11 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-region: us-east-1
 
       - name: Start RDS Instance
         run: |
           DB_INSTANCE_ID=${{ github.event.inputs.db_instance }}
-          echo "Starting RDS instance: $DB_INSTANCE_ID..."
-          aws rds start-db-instance --db-instance-identifier "$DB_INSTANCE_ID"
+          echo "Starting RDS instance: $DB_INSTANCE_ID in us-east-1..."
+          aws rds start-db-instance --db-instance-identifier "$DB_INSTANCE_ID" --region us-east-1
+
