@@ -1,0 +1,61 @@
+name: Start AWS RDS Instance
+
+on:
+  workflow_dispatch:
+    inputs:
+      db_instance:
+        description: "RDS Instance Identifier"
+        required: true
+        type: string
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  start_rds:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Start RDS Instance
+        run: |
+          aws rds start-db-instance --db-instance-identifier ${{ github.event.inputs.db_instance }}
+
+      - name: Verify RDS Status
+        run: |
+          STATUS=$(aws rds describe-db-instances --db-instance-identifier ${{ github.event.inputs.db_instance }} --query 'DBInstances[0].DBInstanceStatus' --output text)
+          echo "Current RDS Status: $STATUS"
+      
+          if [[ "$STATUS" == "available" ]]; then
+            echo "RDS instance is already running. No error should be thrown."
+            exit 0
+          elif [[ "$STATUS" == "starting" ]]; then
+            echo "RDS instance is starting successfully."
+            exit 0
+          else
+            echo "Unexpected error in starting RDS instance."
+            exit 1
+          fi
+
+
+      # - name: Verify RDS Status
+      #   run: |
+      #     STATUS=$(aws rds describe-db-instances --db-instance-identifier ${{ github.event.inputs.db_instance }} --query 'DBInstances[0].DBInstanceStatus' --output text)
+      #     echo "Current RDS Status: $STATUS"
+          
+      #     if [[ "$STATUS" == "available" ]]; then
+      #       echo "RDS instance is running."
+      #     else
+      #       echo "Failed to start RDS instance."
+      #       exit 1
+      #     fi
