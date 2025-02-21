@@ -36,10 +36,10 @@ jobs:
           STATUS=$(aws rds describe-db-instances --db-instance-identifier ${{ github.event.inputs.db_instance }} --query 'DBInstances[0].DBInstanceStatus' --output text)
           echo "Current RDS Status: $STATUS"
       
-          if [[ "$STATUS" == "available" ]]; then
+          if [[ "$STATUS" == "Available" ]]; then
             echo "RDS instance is already running. No error should be thrown."
             exit 0
-          elif [[ "$STATUS" == "starting" ]]; then
+          elif [[ "$STATUS" == "Starting" ]]; then
             echo "RDS instance is starting successfully."
             exit 0
           else
