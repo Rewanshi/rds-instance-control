@@ -27,35 +27,24 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Start RDS Instance
+      - name: Check RDS Status Before Starting
         run: |
-          aws rds start-db-instance --db-instance-identifier ${{ github.event.inputs.db_instance }}
-
-      - name: Verify RDS Status
-        run: |
-          STATUS=$(aws rds describe-db-instances --db-instance-identifier ${{ github.event.inputs.db_instance }} --query 'DBInstances[0].DBInstanceStatus' --output text)
-          echo "Current RDS Status: $STATUS"
+            STATUS=$(aws rds describe-db-instances --db-instance-identifier ${{ github.event.inputs.db_instance }} --query 'DBInstances[0].DBInstanceStatus' --output text)
+            echo "Current RDS Status: $STATUS"
+        
+            if [[ "$STATUS" == "available" ]]; then
+              echo "RDS instance is already running. Skipping start command."
+              exit 0
+            elif [[ "$STATUS" == "stopped"]]; then
+              echo "Starting RDS instance..."
+              aws rds start-db-instance --db-instance-identifier ${{ github.event.inputs.db_instance }}
+            else
+              echo "Instance cannot be started because it is in an invalid state: $STATUS"
+              exit 1
+            fi
       
-          if [[ "$STATUS" == "Available" ]]; then
-            echo "RDS instance is already running. No error should be thrown."
-            exit 0
-          elif [[ "$STATUS" == "Starting" ]]; then
-            echo "RDS instance is starting successfully."
-            exit 0
-          else
-            echo "Unexpected error in starting RDS instance."
-            exit 1
-          fi
-
-
-      # - name: Verify RDS Status
-      #   run: |
-      #     STATUS=$(aws rds describe-db-instances --db-instance-identifier ${{ github.event.inputs.db_instance }} --query 'DBInstances[0].DBInstanceStatus' --output text)
-      #     echo "Current RDS Status: $STATUS"
-          
-      #     if [[ "$STATUS" == "available" ]]; then
-      #       echo "RDS instance is running."
-      #     else
-      #       echo "Failed to start RDS instance."
-      #       exit 1
-      #     fi
+      
+            
+      
+      
+            
