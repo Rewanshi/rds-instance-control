@@ -40,7 +40,7 @@ jobs:
             exit 0
           fi
 
-          if [[ "$STATUS" == "stopped" ]] || [[ "$STATUS" == "inaccessible-encryption-credentials-recoverable" ]] || [[ "$STATUS" == "incompatible-network" ]]; then
+          if [[ "$STATUS" == "stopped" ]] ; then
             echo "Starting RDS instance..."
             aws rds start-db-instance --db-instance-identifier "$DB_INSTANCE_ID"
             exit 0
